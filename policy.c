@@ -194,6 +194,22 @@ usteer_check_request(struct sta_info *si, enum usteer_event_type type)
 	}
 
 	if (type == EVENT_TYPE_ASSOC) {
+		/* Band-aware admission floor (assoc_min_snr): refuse association to an
+		 * upper band (> 2.4 GHz) when the client's signal is below the floor,
+		 * regardless of assoc_steering. This closes cross-node bouncing onto
+		 * weak 5/6 GHz on ANY AP. 2.4 GHz is exempt, so the client always has a
+		 * landing band and cannot be locked out. Admission-only: a connected
+		 * client is never kicked, so unlike min_snr this cannot cause a kick
+		 * storm. */
+		if (config.assoc_min_snr && si->node->freq > 4000 &&
+		    si->signal < usteer_snr_to_signal(si->node, config.assoc_min_snr)) {
+			ev.reason = UEV_REASON_LOW_SIGNAL;
+			ev.threshold.cur = si->signal;
+			ev.threshold.ref = usteer_snr_to_signal(si->node, config.assoc_min_snr);
+			ret = false;
+			goto out;
+		}
+
 		/* Check if assoc request has lower signal than min_signal.
 		 * If this is the case, block assoc even when assoc steering is enabled.
 		 *

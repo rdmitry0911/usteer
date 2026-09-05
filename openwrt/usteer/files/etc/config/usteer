@@ -155,8 +155,22 @@ config usteer
 
 	# Time (ms) after a down-steer during which the client is not allowed back
 	# up to a higher band than it was moved to. Time-based hysteresis that stops
-	# bouncing on a fluctuating signal. 0 disables the hold.
+	# bouncing on a fluctuating signal. 0 disables the hold. NOTE: the hold state
+	# is per-AP (not synced between nodes), so it stops bounce-back to the SAME
+	# AP's upper band but not a jump to another AP's upper band. Use assoc_min_snr
+	# (below) to close that cross-AP gap.
 	#option band_downsteer_hold 30000
+
+	# Admission floor (dBm): refuse a client's association to an UPPER band
+	# (5/6 GHz) on ANY AP when its signal is below this value; 2.4 GHz is always
+	# exempt. This closes cross-AP bouncing onto weak 5/6 GHz that the per-AP
+	# band_downsteer_hold cannot: a client that is weak everywhere on the upper
+	# bands can only land on 2.4 GHz, so it settles instead of thrashing.
+	# Unlike min_snr this is ADMISSION-ONLY -- it never kicks a connected client,
+	# so it cannot cause the assoc/kick storm that min_snr does; and because
+	# 2.4 GHz is exempt the client always has a landing band (no lockout).
+	# Enforced independently of assoc_steering. 0 disables it.
+	#option assoc_min_snr 0
 
 	# SNR difference that the signal must be better compared to signal was on connection to node.
 	# Avoids conflicts between roaming and band-steering policies.

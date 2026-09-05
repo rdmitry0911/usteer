@@ -205,6 +205,9 @@ struct usteer_config {
 	int32_t band_steering_min_snr;
 	int32_t band_downsteer_snr;
 	uint32_t band_downsteer_hold;
+	/* Admission floor: refuse assoc to an upper band (>2.4 GHz) below this
+	 * SNR, regardless of assoc_steering; 2.4 GHz exempt. Admission-only. */
+	int32_t assoc_min_snr;
 	uint32_t band_steering_signal_threshold;
 
 	uint32_t link_measurement_interval;
