@@ -182,6 +182,17 @@ usteer_check_request(struct sta_info *si, enum usteer_event_type type)
 	if (type == EVENT_TYPE_AUTH)
 		goto out;
 
+	/* Down-steer hold-down: for band_downsteer_hold ms after a down-steer,
+	 * refuse probe/assoc for a band higher than the one the client was moved
+	 * to. Time-based hysteresis stops a client bouncing back up on brief signal
+	 * peaks. */
+	if (config.band_downsteer_hold && si->sta->downsteer_hold_until &&
+	    current_time < si->sta->downsteer_hold_until &&
+	    si->node->freq > si->sta->downsteer_to_freq) {
+		ret = false;
+		goto out;
+	}
+
 	if (type == EVENT_TYPE_ASSOC) {
 		/* Check if assoc request has lower signal than min_signal.
 		 * If this is the case, block assoc even when assoc steering is enabled.
@@ -387,6 +398,8 @@ usteer_roam_trigger_sm(struct usteer_local_node *ln, struct sta_info *si)
 					MSG(VERBOSE, "down-steer " MAC_ADDR_FMT " to %s (signal %d)\n",
 					    MAC_ADDR_DATA(si->sta->addr), usteer_node_name(lower), si->signal);
 					usteer_ubus_bss_transition_request(si, 1, true, 0, true, vp, lower);
+					si->sta->downsteer_hold_until = current_time + config.band_downsteer_hold;
+					si->sta->downsteer_to_freq = lower->freq;
 				}
 			}
 			usteer_roam_set_state(si, ROAM_TRIGGER_IDLE, &ev);

@@ -148,11 +148,15 @@ config usteer
 	# when the roaming policy has found no better measured candidate on another
 	# AP. Fixes clients (notably iOS) that cling to a weak 6 GHz signal while a
 	# stronger lower band of the same AP is available. A value of 0 disables it.
-	# Pair with min_snr to make the move durable: min_snr blocks re-association
-	# to a band below the threshold, so a client cannot bounce straight back up.
-	# This is safe with the cascade - if every upper band is below min_snr the
-	# client simply lands on 2.4 GHz, which reaches furthest and stays above it.
+	# Pair with band_downsteer_hold (below) for durability: min_snr-style kicking
+	# tends to fight the client's own band preference and cause an assoc/kick
+	# storm, whereas the directed BSS-TM plus a hold moves the client gently.
 	#option band_downsteer_snr 0
+
+	# Time (ms) after a down-steer during which the client is not allowed back
+	# up to a higher band than it was moved to. Time-based hysteresis that stops
+	# bouncing on a fluctuating signal. 0 disables the hold.
+	#option band_downsteer_hold 30000
 
 	# SNR difference that the signal must be better compared to signal was on connection to node.
 	# Avoids conflicts between roaming and band-steering policies.

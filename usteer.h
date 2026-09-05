@@ -204,6 +204,7 @@ struct usteer_config {
 	uint32_t band_steering_interval;
 	int32_t band_steering_min_snr;
 	int32_t band_downsteer_snr;
+	uint32_t band_downsteer_hold;
 	uint32_t band_steering_signal_threshold;
 
 	uint32_t link_measurement_interval;
@@ -303,6 +304,10 @@ struct sta {
 	uint8_t seen_5ghz : 1;
 
 	uint32_t aggressiveness;
+
+	/* Down-steer hold: block upsteer above downsteer_to_freq until this time. */
+	uint64_t downsteer_hold_until;
+	uint32_t downsteer_to_freq;
 
 	uint8_t addr[6];
 };
