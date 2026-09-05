@@ -374,6 +374,21 @@ usteer_roam_trigger_sm(struct usteer_local_node *ln, struct sta_info *si)
 		candidate = usteer_roam_sm_found_better_node(si, &ev, ROAM_TRIGGER_SCAN_DONE);
 		/* Kick back in case no better node is found */
 		if (!candidate) {
+			/* No measured better route. Fall back to same-AP down-steering:
+			 * if the client sits on an upper band (5/6 GHz) below
+			 * band_downsteer_snr, push it to the next-lower band of the same
+			 * AP. min_snr / min_connect_snr then refuse a bounce back up to a
+			 * band below the threshold, so the move is durable. */
+			if (config.band_downsteer_snr && si->node->freq > 4000 &&
+			    si->signal < usteer_snr_to_signal(si->node, config.band_downsteer_snr)) {
+				struct usteer_node *lower = usteer_band_downsteer_target(ln);
+				if (lower) {
+					uint32_t vp = 10000 / usteer_local_node_get_beacon_interval(ln);
+					MSG(VERBOSE, "down-steer " MAC_ADDR_FMT " to %s (signal %d)\n",
+					    MAC_ADDR_DATA(si->sta->addr), usteer_node_name(lower), si->signal);
+					usteer_ubus_bss_transition_request(si, 1, true, 0, true, vp, lower);
+				}
+			}
 			usteer_roam_set_state(si, ROAM_TRIGGER_IDLE, &ev);
 			break;
 		}

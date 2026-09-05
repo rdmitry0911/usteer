@@ -143,6 +143,17 @@ config usteer
 	# steered to a higher frequency band
 	#option band_steering_min_snr -60
 
+	# Signal level (dBm) below which a client on an upper band (5/6 GHz) is
+	# down-steered to the next-lower band of the SAME AP (6->5->2.4), but only
+	# when the roaming policy has found no better measured candidate on another
+	# AP. Fixes clients (notably iOS) that cling to a weak 6 GHz signal while a
+	# stronger lower band of the same AP is available. A value of 0 disables it.
+	# Pair with min_snr to make the move durable: min_snr blocks re-association
+	# to a band below the threshold, so a client cannot bounce straight back up.
+	# This is safe with the cascade - if every upper band is below min_snr the
+	# client simply lands on 2.4 GHz, which reaches furthest and stays above it.
+	#option band_downsteer_snr 0
+
 	# SNR difference that the signal must be better compared to signal was on connection to node.
 	# Avoids conflicts between roaming and band-steering policies.
 	# A value of 0 disables threshold.

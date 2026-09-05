@@ -203,6 +203,7 @@ struct usteer_config {
 
 	uint32_t band_steering_interval;
 	int32_t band_steering_min_snr;
+	int32_t band_downsteer_snr;
 	uint32_t band_steering_signal_threshold;
 
 	uint32_t link_measurement_interval;
@@ -350,6 +351,7 @@ bool usteer_policy_can_perform_roam(struct sta_info *si);
 void usteer_band_steering_perform_steer(struct usteer_local_node *ln);
 void usteer_band_steering_sta_update(struct sta_info *si);
 bool usteer_band_steering_is_target(struct usteer_local_node *ln, struct usteer_node *node);
+struct usteer_node *usteer_band_downsteer_target(struct usteer_local_node *ln);
 
 void usteer_ubus_init(struct ubus_context *ctx);
 void usteer_ubus_kick_client(struct sta_info *si, uint32_t kick_reason_code);
