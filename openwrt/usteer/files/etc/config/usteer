@@ -172,6 +172,15 @@ config usteer
 	# Enforced independently of assoc_steering. 0 disables it.
 	#option assoc_min_snr 0
 
+	# Forced down-steer (ms): a plain down-steer is a BSS-TM suggestion that some
+	# clients (notably iOS) ignore, clinging to a dying upper band. If set, then
+	# this many ms after down-steering a client that is still on the upper band
+	# is kicked (deauth). Paired with assoc_min_snr this is safe: the kicked
+	# client cannot reassociate to the weak upper band, so it lands on 2.4/5 GHz
+	# and cannot bounce back -- no kick storm (the failure mode of blind min_snr).
+	# 0 = gentle (suggestion only). Typical: 8000 (give the client ~8s to comply).
+	#option band_downsteer_disassoc 0
+
 	# SNR difference that the signal must be better compared to signal was on connection to node.
 	# Avoids conflicts between roaming and band-steering policies.
 	# A value of 0 disables threshold.

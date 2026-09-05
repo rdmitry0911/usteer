@@ -410,12 +410,23 @@ usteer_roam_trigger_sm(struct usteer_local_node *ln, struct sta_info *si)
 			    si->signal < usteer_snr_to_signal(si->node, config.band_downsteer_snr)) {
 				struct usteer_node *lower = usteer_band_downsteer_target(ln);
 				if (lower) {
-					uint32_t vp = 10000 / usteer_local_node_get_beacon_interval(ln);
-					MSG(VERBOSE, "down-steer " MAC_ADDR_FMT " to %s (signal %d)\n",
-					    MAC_ADDR_DATA(si->sta->addr), usteer_node_name(lower), si->signal);
-					usteer_ubus_bss_transition_request(si, 1, true, 0, true, vp, lower);
+					uint32_t bi = usteer_local_node_get_beacon_interval(ln);
+					uint32_t vp = 10000 / bi;
+					uint32_t dtimer = config.band_downsteer_disassoc ?
+					    config.band_downsteer_disassoc / bi : 0;
+					MSG(VERBOSE, "down-steer " MAC_ADDR_FMT " to %s (signal %d%s)\n",
+					    MAC_ADDR_DATA(si->sta->addr), usteer_node_name(lower), si->signal,
+					    config.band_downsteer_disassoc ? ", forced" : "");
+					usteer_ubus_bss_transition_request(si, 1, true, dtimer, true, vp, lower);
 					si->sta->downsteer_hold_until = current_time + config.band_downsteer_hold;
 					si->sta->downsteer_to_freq = lower->freq;
+					/* If the client ignores the BSS-TM (iOS often does) and is
+					 * still on this upper band after band_downsteer_disassoc ms,
+					 * kick it. assoc_min_snr then refuses reassoc to a weak upper
+					 * band, so it lands on 2.4/5 and cannot bounce back -> no
+					 * kick storm (unlike blind min_snr). */
+					if (config.band_downsteer_disassoc && !si->kick_time)
+						si->kick_time = current_time + config.band_downsteer_disassoc;
 				}
 			}
 			usteer_roam_set_state(si, ROAM_TRIGGER_IDLE, &ev);
